@@ -1198,7 +1198,7 @@ static void mntput_no_expire(struct mount *mnt)
 				return;
 		}
 		if (llist_add(&mnt->mnt_llist, &delayed_mntput_list))
-			queue_delayed_work(system_power_efficient_wq, &delayed_mntput_work, 1);
+			schedule_delayed_work(&delayed_mntput_work, 1);
 		return;
 	}
 	cleanup_mnt(mnt);
@@ -3176,9 +3176,9 @@ int path_mount(const char *dev_name, struct path *path,
 	if ((flags & SB_MANDLOCK) && !may_mandlock())
 		return -EPERM;
 
-	/* Default to noatime unless overriden */
-	if (!(flags & MS_RELATIME))
-		mnt_flags |= MNT_NOATIME;
+	/* Default to relatime unless overriden */
+	if (!(flags & MS_NOATIME))
+		mnt_flags |= MNT_RELATIME;
 
 	/* Separate the per-mountpoint flags */
 	if (flags & MS_NOSUID)
