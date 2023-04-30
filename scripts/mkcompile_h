@@ -30,14 +30,14 @@ TIMESTAMP=`date`
 #	TIMESTAMP=$KBUILD_BUILD_TIMESTAMP
 #fi
 if test -z "$KBUILD_BUILD_USER"; then
-	LINUX_COMPILE_BY="duhjoker"
+	LINUX_COMPILE_BY="Yehonatan"
 else
-	LINUX_COMPILE_BY="duhjoker"
+	LINUX_COMPILE_BY="Yehonatan"
 fi
 if test -z "$KBUILD_BUILD_HOST"; then
-	LINUX_COMPILE_HOST="Biohazard"
+	LINUX_COMPILE_HOST="Starlite"
 else
-	LINUX_COMPILE_HOST="Biohazard"
+	LINUX_COMPILE_HOST="Starlite"
 fi
 
 UTS_VERSION="#$VERSION"
