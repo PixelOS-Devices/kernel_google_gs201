@@ -317,7 +317,6 @@
   crc32_le
   crc8
   crc8_populate_msb
-  creds_are_invalid
   crypto_aead_decrypt
   crypto_aead_encrypt
   crypto_aead_setauthsize
@@ -821,19 +820,6 @@
   drm_writeback_signal_completion
   dump_backtrace
   dump_stack
-  dvb_ca_en50221_init
-  dvb_ca_en50221_release
-  dvb_dmx_init
-  dvb_dmx_release
-  dvb_dmx_swfilter
-  dvb_dmxdev_init
-  dvb_dmxdev_release
-  dvb_frontend_detach
-  dvb_frontend_sleep_until
-  dvb_register_adapter
-  dvb_register_frontend
-  dvb_unregister_adapter
-  dvb_unregister_frontend
   dwc3_send_gadget_ep_cmd
   dwc3_stop_active_transfer
   dw_handle_msi_irq
@@ -842,6 +828,8 @@
   dw_pcie_read
   dw_pcie_setup_rc
   dw_pcie_write
+  __dynamic_dev_dbg
+  __dynamic_pr_debug
   em_cpu_get
   emergency_restart
   enable_irq
@@ -872,14 +860,13 @@
   filp_open_block
   find_extend_vma
   find_get_pid
-  find_first_bit
-  find_first_zero_bit
   find_last_bit
   find_next_bit
   find_next_zero_bit
   find_pid_ns
   find_task_by_vpid
   find_vma
+  find_vm_area
   find_vpid
   finish_wait
   firmware_request_nowarn
@@ -1033,7 +1020,6 @@
   i2c_adapter_type
   i2c_add_numbered_adapter
   i2c_bus_type
-  i2c_clients_command
   i2c_del_adapter
   i2c_del_driver
   i2c_for_each_dev
@@ -1108,11 +1094,8 @@
   interval_tree_iter_first
   interval_tree_iter_next
   interval_tree_remove
-  intlog10
-  intlog2
   int_sqrt
   int_to_scsilun
-  __invalid_creds
   iomem_resource
   iommu_alloc_resv_region
   iommu_attach_group
@@ -1308,8 +1291,6 @@
   mbox_free_channel
   mbox_request_channel
   mbox_send_message
-  media_device_register_entity
-  media_entity_pads_init
   memchr
   memcmp
   memcpy
@@ -1520,7 +1501,6 @@
   param_ops_charp
   param_ops_int
   param_ops_long
-  param_ops_short
   param_ops_string
   param_ops_uint
   param_ops_ulong
@@ -1640,6 +1620,7 @@
   pm_runtime_forbid
   pm_runtime_force_resume
   pm_runtime_force_suspend
+  pm_runtime_get_if_active
   __pm_runtime_idle
   pm_runtime_irq_safe
   __pm_runtime_resume
@@ -1713,6 +1694,7 @@
   ___ratelimit
   raw_notifier_call_chain
   raw_notifier_chain_register
+  raw_notifier_chain_unregister
   _raw_read_lock
   _raw_read_lock_bh
   _raw_read_lock_irq
@@ -1783,7 +1765,6 @@
   regmap_bulk_read
   regmap_bulk_write
   regmap_get_device
-  __regmap_init_i2c
   regmap_irq_get_virq
   regmap_multi_reg_write
   regmap_multi_reg_write_bypassed
@@ -2147,8 +2128,6 @@
   suspend_set_ops
   __sw_hweight32
   __sw_hweight64
-  __symbol_get
-  __symbol_put
   sync_file_create
   sync_file_get_fence
   synchronize_irq
@@ -2619,14 +2598,12 @@
   __usecs_to_jiffies
   usleep_range
   uuid_gen
-  v4l2_ctrl_auto_cluster
   v4l2_ctrl_handler_free
   v4l2_ctrl_handler_init_class
   v4l2_ctrl_log_status
   v4l2_ctrl_new_custom
   v4l2_ctrl_new_std
   v4l2_ctrl_new_std_menu
-  v4l2_ctrl_subdev_log_status
   v4l2_device_register
   v4l2_device_unregister
   v4l2_fh_add

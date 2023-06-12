@@ -29,8 +29,6 @@
 #include <soc/google/exynos-cpupm.h>
 #endif
 
-#include <linux/spi/spi-exynos.h>
-
 static LIST_HEAD(drvdata_list);
 
 #define MAX_SPI_PORTS		22
@@ -98,6 +96,7 @@ static LIST_HEAD(drvdata_list);
 #define S3C64XX_SPI_ST_TX_FIFORDY		BIT(0)
 
 #define S3C64XX_SPI_PACKET_CNT_EN		BIT(16)
+#define S3C64XX_SPI_PACKET_CNT_MASK		GENMASK(15, 0)
 
 #define S3C64XX_SPI_PND_TX_UNDERRUN_CLR		BIT(4)
 #define S3C64XX_SPI_PND_TX_OVERRUN_CLR		BIT(3)
@@ -173,14 +172,6 @@ struct s3c64xx_spi_port_config {
 	bool	high_speed;
 	bool	clk_from_cmu;
 };
-
-int spi_get_master_irq(struct spi_device *spi_slv)
-{
-	struct s3c64xx_spi_driver_data *mas = spi_master_get_devdata(spi_slv->master);
-
-	return mas->irq;
-}
-EXPORT_SYMBOL(spi_get_master_irq);
 
 static ssize_t
 spi_dbg_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -1175,6 +1166,13 @@ out:
 	return 0;
 }
 
+static size_t s3c64xx_spi_max_transfer_size(struct spi_device *spi)
+{
+	struct spi_controller *ctlr = spi->controller;
+
+	return ctlr->can_dma ? S3C64XX_SPI_PACKET_CNT_MASK : SIZE_MAX;
+}
+
 static struct s3c64xx_spi_csinfo *s3c64xx_get_slave_ctrldata
 (struct spi_device *spi)
 {
@@ -1630,7 +1628,6 @@ static int s3c64xx_spi_probe(struct platform_device *pdev)
 	sdd->cntrlr_info = sci;
 	sdd->pdev = pdev;
 	sdd->sfr_start = mem_res->start;
-	sdd->irq = irq;
 	sdd->is_probed = 0;
 	sdd->ops = NULL;
 
@@ -1689,6 +1686,7 @@ static int s3c64xx_spi_probe(struct platform_device *pdev)
 	master->prepare_transfer_hardware = s3c64xx_spi_prepare_transfer;
 	master->transfer_one_message = s3c64xx_spi_transfer_one_message;
 	master->unprepare_transfer_hardware = s3c64xx_spi_unprepare_transfer;
+	master->max_transfer_size = s3c64xx_spi_max_transfer_size;
 	master->num_chipselect = sci->num_cs;
 	master->dma_alignment = 8;
 	master->bits_per_word_mask = BIT(32 - 1) | BIT(16 - 1) | BIT(8 - 1);

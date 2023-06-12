@@ -28,28 +28,28 @@
 #include <net/protocol.h>
 #include <net/netevent.h>
 
-static int two __read_only = 2;
-static int four __read_only = 4;
-static int thousand __read_only = 1000;
-static int gso_max_segs __read_only = GSO_MAX_SEGS;
-static int tcp_retr1_max __read_only = 255;
-static int ip_local_port_range_min[] __read_only = { 1, 1 };
-static int ip_local_port_range_max[] __read_only = { 65535, 65535 };
-static int tcp_adv_win_scale_min __read_only = -31;
-static int tcp_adv_win_scale_max __read_only = 31;
-static int tcp_min_snd_mss_min __read_only = TCP_MIN_SND_MSS;
-static int tcp_min_snd_mss_max __read_only = 65535;
-static int ip_privileged_port_min __read_only;
-static int ip_privileged_port_max __read_only = 65535;
-static int ip_ttl_min __read_only = 1;
-static int ip_ttl_max __read_only = 255;
-static int tcp_syn_retries_min __read_only = 1;
-static int tcp_syn_retries_max __read_only = MAX_TCP_SYNCNT;
-static int ip_ping_group_range_min[] __read_only = { 0, 0 };
-static int ip_ping_group_range_max[] __read_only = { GID_T_MAX, GID_T_MAX };
-static int comp_sack_nr_max __read_only = 255;
-static u32 u32_max_div_HZ __read_only = UINT_MAX / HZ;
-static int one_day_secs __read_only = 24 * 3600;
+static int two = 2;
+static int four = 4;
+static int thousand = 1000;
+static int gso_max_segs = GSO_MAX_SEGS;
+static int tcp_retr1_max = 255;
+static int ip_local_port_range_min[] = { 1, 1 };
+static int ip_local_port_range_max[] = { 65535, 65535 };
+static int tcp_adv_win_scale_min = -31;
+static int tcp_adv_win_scale_max = 31;
+static int tcp_min_snd_mss_min = TCP_MIN_SND_MSS;
+static int tcp_min_snd_mss_max = 65535;
+static int ip_privileged_port_min;
+static int ip_privileged_port_max = 65535;
+static int ip_ttl_min = 1;
+static int ip_ttl_max = 255;
+static int tcp_syn_retries_min = 1;
+static int tcp_syn_retries_max = MAX_TCP_SYNCNT;
+static int ip_ping_group_range_min[] = { 0, 0 };
+static int ip_ping_group_range_max[] = { GID_T_MAX, GID_T_MAX };
+static int comp_sack_nr_max = 255;
+static u32 u32_max_div_HZ = UINT_MAX / HZ;
+static int one_day_secs = 24 * 3600;
 
 /* obsolete */
 static int sysctl_tcp_low_latency __read_mostly;
@@ -361,61 +361,6 @@ bad_key:
 	return ret;
 }
 
-static void proc_configure_early_demux(int enabled, int protocol)
-{
-	struct net_protocol *ipprot;
-#if IS_ENABLED(CONFIG_IPV6)
-	struct inet6_protocol *ip6prot;
-#endif
-
-	rcu_read_lock();
-
-	ipprot = rcu_dereference(inet_protos[protocol]);
-	if (ipprot)
-		ipprot->early_demux = enabled ? ipprot->early_demux_handler :
-						NULL;
-
-#if IS_ENABLED(CONFIG_IPV6)
-	ip6prot = rcu_dereference(inet6_protos[protocol]);
-	if (ip6prot)
-		ip6prot->early_demux = enabled ? ip6prot->early_demux_handler :
-						 NULL;
-#endif
-	rcu_read_unlock();
-}
-
-static int proc_tcp_early_demux(struct ctl_table *table, int write,
-				void *buffer, size_t *lenp, loff_t *ppos)
-{
-	int ret = 0;
-
-	ret = proc_dointvec(table, write, buffer, lenp, ppos);
-
-	if (write && !ret) {
-		int enabled = init_net.ipv4.sysctl_tcp_early_demux;
-
-		proc_configure_early_demux(enabled, IPPROTO_TCP);
-	}
-
-	return ret;
-}
-
-static int proc_udp_early_demux(struct ctl_table *table, int write,
-				void *buffer, size_t *lenp, loff_t *ppos)
-{
-	int ret = 0;
-
-	ret = proc_dointvec(table, write, buffer, lenp, ppos);
-
-	if (write && !ret) {
-		int enabled = init_net.ipv4.sysctl_udp_early_demux;
-
-		proc_configure_early_demux(enabled, IPPROTO_UDP);
-	}
-
-	return ret;
-}
-
 static int proc_tfo_blackhole_detect_timeout(struct ctl_table *table,
 					     int write, void *buffer,
 					     size_t *lenp, loff_t *ppos)
@@ -685,14 +630,14 @@ static struct ctl_table ipv4_net_table[] = {
 		.data           = &init_net.ipv4.sysctl_udp_early_demux,
 		.maxlen         = sizeof(int),
 		.mode           = 0644,
-		.proc_handler   = proc_udp_early_demux
+		.proc_handler   = proc_douintvec_minmax,
 	},
 	{
 		.procname       = "tcp_early_demux",
 		.data           = &init_net.ipv4.sysctl_tcp_early_demux,
 		.maxlen         = sizeof(int),
 		.mode           = 0644,
-		.proc_handler   = proc_tcp_early_demux
+		.proc_handler   = proc_douintvec_minmax,
 	},
 	{
 		.procname       = "nexthop_compat_mode",
@@ -1010,7 +955,7 @@ static struct ctl_table ipv4_net_table[] = {
 		.procname	= "tcp_fastopen",
 		.data		= &init_net.ipv4.sysctl_tcp_fastopen,
 		.maxlen		= sizeof(int),
-		.mode		= 0444,
+		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
 	{

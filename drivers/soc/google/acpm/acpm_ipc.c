@@ -121,30 +121,28 @@ EXPORT_SYMBOL_GPL(is_acpm_ipc_flushed);
 
 static int plugins_init(struct device_node *node)
 {
-	struct plugin __iomem *plugins;
+	struct plugin *plugins;
 	int i, len, ret = 0;
-	const char __iomem *name = NULL;
+	const char *name = NULL;
 	void __iomem *base_addr = NULL;
 	const __be32 *prop;
 	unsigned int offset;
-	char dvfs_name[5] = {0};
 
 	plugins = (struct plugin *)(acpm_srambase + acpm_initdata->plugins);
 
 	for (i = 0; i < acpm_initdata->num_plugins; i++) {
-		if (readb_relaxed(&plugins[i].is_attached) == 0)
+		if (plugins[i].is_attached == 0)
 			continue;
 
 		name = (const char *)(acpm_srambase + plugins[i].fw_name);
 		if (!plugins[i].fw_name || !name)
 			continue;
 
-		memcpy_fromio(dvfs_name, name, 4);
-		if (strcmp(dvfs_name, "DVFS") == 0 || strcmp(dvfs_name, "dvfs") == 0) {
+		if (strstr(name, "DVFS") || strstr(name, "dvfs")) {
 			prop = of_get_property(node, "fvmap_offset", &len);
 			if (prop) {
 				base_addr = acpm_srambase;
-				base_addr += (readl_relaxed(&plugins[i].base_addr) & ~0x1);
+				base_addr += (plugins[i].base_addr & ~0x1);
 				offset = be32_to_cpup(prop);
 				base_addr += offset;
 			}
@@ -647,6 +645,38 @@ static void cpu_irq_info_dump(u32 retry)
 	}
 }
 
+static void acpm_ktop_release(void)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&acpm_debug->lock, flags);
+	if (acpm_debug->ktop_cxt) {
+		kernel_top_destroy(acpm_debug->ktop_cxt);
+		acpm_debug->ktop_cxt = NULL;
+	}
+	spin_unlock_irqrestore(&acpm_debug->lock, flags);
+}
+
+static void acpm_ktop_init(void)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&acpm_debug->lock, flags);
+	acpm_debug->ktop_cxt = NULL;
+	kernel_top_init(acpm_ipc->dev, &acpm_debug->ktop_cxt);
+	spin_unlock_irqrestore(&acpm_debug->lock, flags);
+}
+
+static void acpm_ktop_print(void)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&acpm_debug->lock, flags);
+	if (acpm_debug->ktop_cxt)
+		kernel_top_print(acpm_debug->ktop_cxt);
+	spin_unlock_irqrestore(&acpm_debug->lock, flags);
+}
+
 int __acpm_ipc_send_data(unsigned int channel_id, struct ipc_config *cfg, bool w_mode)
 {
 	volatile unsigned int tx_front, tx_rear, rx_front;
@@ -783,6 +813,8 @@ retry:
 								2 : saved_debug_log_level;
 						acpm_log_print();
 						acpm_debug->debug_log_level = saved_debug_log_level;
+					} else if (retry_cnt == 2) {
+						acpm_ktop_init();
 					}
 					++retry_cnt;
 
@@ -808,10 +840,13 @@ retry:
 			pr_err("%s Timeout error! now = %llu timeout = %llu ch:%u s:%u bitmap:%lx\n",
 			       __func__, now, timeout, channel->id, seq_num,
 			       channel->bitmap_seqnum[0]);
+
+			acpm_ktop_print();
 			acpm_ramdump();
 			dump_stack();
 			dbg_snapshot_do_dpm_policy(acpm_ipc->panic_action, "acpm_ipc timeout");
 		}
+		acpm_ktop_release();
 	}
 
 	return 0;

@@ -30,6 +30,13 @@
 #include <openssl/engine.h>
 
 /*
+ * OpenSSL 3.0 deprecates the OpenSSL's ENGINE API.
+ *
+ * Remove this if/when that API is no longer used
+ */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+/*
  * Use CMS if we have openssl-1.0.0 or newer available - otherwise we have to
  * assume that it's not available and its header file is missing and that we
  * should use PKCS#7 instead.  Switching to the older PKCS#7 format restricts
@@ -281,14 +288,12 @@ int main(int argc, char **argv)
 		replace_orig = true;
 	}
 
-#ifndef OPENSSL_IS_BORINGSSL
 #ifdef USE_PKCS7
 	if (strcmp(hash_algo, "sha1") != 0) {
 		fprintf(stderr, "sign-file: %s only supports SHA1 signing\n",
 			OPENSSL_VERSION_TEXT);
 		exit(3);
 	}
-#endif
 #endif
 
 	/* Open the module file */

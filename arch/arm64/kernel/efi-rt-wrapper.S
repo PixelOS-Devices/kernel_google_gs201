@@ -36,6 +36,7 @@ SYM_FUNC_START(__efi_rt_asm_wrapper)
 	mov	x4, x6
 	blr	x8
 
+	mov	sp, x29
 	ldp	x1, x2, [sp, #16]
 	cmp	x2, x18
 	ldp	x29, x30, [sp], #32
@@ -53,5 +54,6 @@ SYM_FUNC_START(__efi_rt_asm_wrapper)
 	ldr_l	x18, efi_rt_stack_top
 	ldr	x18, [x18, #-16]
 #endif
+
 	b	efi_handle_corrupted_x18	// tail call
 SYM_FUNC_END(__efi_rt_asm_wrapper)

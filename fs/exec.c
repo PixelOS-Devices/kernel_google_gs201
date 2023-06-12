@@ -64,7 +64,6 @@
 #include <linux/compat.h>
 #include <linux/vmalloc.h>
 #include <linux/io_uring.h>
-#include <linux/random.h>
 
 #include <linux/uaccess.h>
 #include <asm/mmu_context.h>
@@ -284,8 +283,6 @@ static int __bprm_mm_init(struct linux_binprm *bprm)
 	mm->stack_vm = mm->total_vm = 1;
 	mmap_write_unlock(mm);
 	bprm->p = vma->vm_end - sizeof(void *);
-	if (!(current->personality & ADDR_NO_RANDOMIZE) && randomize_va_space)
-		bprm->p ^= get_random_int() & ~PAGE_MASK;
 	return 0;
 err:
 	mmap_write_unlock(mm);
@@ -1206,11 +1203,11 @@ static int unshare_sighand(struct task_struct *me)
 			return -ENOMEM;
 
 		refcount_set(&newsighand->count, 1);
-		memcpy(newsighand->action, oldsighand->action,
-		       sizeof(newsighand->action));
 
 		write_lock_irq(&tasklist_lock);
 		spin_lock(&oldsighand->siglock);
+		memcpy(newsighand->action, oldsighand->action,
+		       sizeof(newsighand->action));
 		rcu_assign_pointer(me->sighand, newsighand);
 		spin_unlock(&oldsighand->siglock);
 		write_unlock_irq(&tasklist_lock);
@@ -1902,10 +1899,6 @@ static int do_execveat_common(int fd, struct filename *filename,
 		retval = PTR_ERR(bprm);
 		goto out_ret;
 	}
-
-#define FLAG_COMPAT_VA_39_BIT (1 << 30)
-	bprm->compat_va_39_bit = flags & FLAG_COMPAT_VA_39_BIT;
-	flags &= ~FLAG_COMPAT_VA_39_BIT; // flag validation fails when it sees an unknown flag
 
 	retval = count(argv, MAX_ARG_STRINGS);
 	if (retval == 0)

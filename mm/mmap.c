@@ -251,13 +251,6 @@ SYSCALL_DEFINE1(brk, unsigned long, brk)
 
 	newbrk = PAGE_ALIGN(brk);
 	oldbrk = PAGE_ALIGN(mm->brk);
-	/* properly handle unaligned min_brk as an empty heap */
-	if (min_brk & ~PAGE_MASK) {
-		if (brk == min_brk)
-			newbrk -= PAGE_SIZE;
-		if (mm->brk == min_brk)
-			oldbrk -= PAGE_SIZE;
-	}
 	if (oldbrk == newbrk) {
 		mm->brk = brk;
 		goto success;
@@ -1927,7 +1920,7 @@ unsigned long mmap_region(struct file *file, unsigned long addr,
 	if (!arch_validate_flags(vma->vm_flags)) {
 		error = -EINVAL;
 		if (file)
-			goto unmap_and_free_vma;
+			goto close_and_free_vma;
 		else
 			goto free_vma;
 	}
@@ -1974,6 +1967,9 @@ out:
 
 	return addr;
 
+close_and_free_vma:
+	if (vma->vm_ops && vma->vm_ops->close)
+		vma->vm_ops->close(vma);
 unmap_and_free_vma:
 	vma->vm_file = NULL;
 	fput(file);
